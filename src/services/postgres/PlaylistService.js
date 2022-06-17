@@ -2,7 +2,7 @@ const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvarianError');
 const ClientError = require('../../exceptions/ClientError');
-const NoyFoundError = require('../../exceptions/NotFoundError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistService {
@@ -10,6 +10,21 @@ class PlaylistService {
     this._pool = new Pool();
     this._songService = songService;
     this._userSerVice = userService;
+  }
+
+  async verifyPlaylistOwner(id, owner) {
+    const query = {
+      text: 'SELECT * FROM playlist WHERE id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) throw new NotFoundError('Playlist is not found');
+
+    const playlist = result.rows[0];
+
+    if (playlist.owner !== owner) throw new AuthorizationError('You cannot access this resource');
   }
 
   async addPlaylist({ name, owner }) {
@@ -42,6 +57,8 @@ class PlaylistService {
     await this._songService.getSongById(songId);
 
     await this._userSerVice.getUserById(owner);
+
+    await this.verifyPlaylistOwner(playlistId, owner);
 
     const id = nanoid(16);
 
