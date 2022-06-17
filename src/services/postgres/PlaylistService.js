@@ -1,7 +1,6 @@
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvarianError');
-const ClientError = require('../../exceptions/ClientError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
@@ -53,6 +52,17 @@ class PlaylistService {
     return result.rows;
   }
 
+  async getPlaylistById(id) {
+    const query = {
+      text: 'SELECT playlist.id, playlist.name, users.username FROM playlist LEFT JOIN users ON users.id = playlist.owner WHERE playlist.id = $1',
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    return result.rows[0];
+  }
+
   async postSongByIdPlaylist(owner, playlistId, songId) {
     await this._songService.getSongById(songId);
 
@@ -72,6 +82,59 @@ class PlaylistService {
     if (!result.rows[0].id) throw new InvariantError('Songs failure to Add');
 
     return result.rows[0].id;
+  }
+
+  async getPlaylistByOwner(playlistId, owner) {
+    await this.verifyPlaylistOwner(playlistId, owner);
+
+    const query = {
+      text: 'SELECT songs.id, songs.title, songs.performer FROM playlist_songs LEFT JOIN songs ON songs.id = playlist_songs.song_id WHERE playlist_songs.playlist_id = $1',
+      values: [playlistId],
+    };
+
+    const result = await this._pool.query(query);
+    const songs = result.rows;
+
+    const playlist = await this.getPlaylistById(playlistId);
+
+    return {
+      id: playlist.id,
+      name: playlist.name,
+      username: playlist.username,
+      songs,
+    };
+  }
+
+  async deleteSongByIdPlaylist(owner, playlistId, songId) {
+    await this._songService.getSongById(songId);
+
+    await this._userSerVice.getUserById(owner);
+
+    await this.verifyPlaylistOwner(playlistId, owner);
+
+    const query = {
+      text: 'DELETE FROM playlist_songs WHERE playlist_id = $1 AND song_id = $2 RETURNING id',
+      values: [playlistId, songId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) throw new NotFoundError('Songs failure to delete');
+  }
+
+  async deletePlaylist(playlistId, owner) {
+    await this._userSerVice.getUserById(owner);
+
+    await this.verifyPlaylistOwner(playlistId, owner);
+
+    const query = {
+      text: 'DELETE FROM playlist WHERE id = $1 RETURNING id',
+      values: [playlistId],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) throw new NotFoundError('Songs failure to delete');
   }
 }
 
