@@ -10,7 +10,7 @@ class ActivitiesService {
   }
 
   async addActivities(playlistId, songId, owner) {
-    const idActivities = nanoid(16);
+    const idActivities = `act-${nanoid(16)}`;
     const action = 'add';
     const time = new Date().toISOString();
 
@@ -25,7 +25,7 @@ class ActivitiesService {
   }
 
   async deleteActivities(playlistId, songId, owner) {
-    const idActivities = nanoid(16);
+    const idActivities = `act-${nanoid(16)}`;
     const action = 'delete';
     const time = new Date().toISOString();
 
