@@ -1,5 +1,6 @@
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
+const ActivitiesService = require('./ActivitiesService');
 const InvariantError = require('../../exceptions/InvarianError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
@@ -9,6 +10,7 @@ class PlaylistService {
     this._pool = new Pool();
     this._songService = songService;
     this._userSerVice = userService;
+    this._activitiesService = new ActivitiesService();
   }
 
   async verifyPlaylistOwner(id, owner) {
@@ -81,6 +83,8 @@ class PlaylistService {
 
     if (!result.rows[0].id) throw new InvariantError('Songs failure to Add');
 
+    await this._activitiesService.addActivities(playlistId, songId, owner);
+
     return result.rows[0].id;
   }
 
@@ -120,6 +124,8 @@ class PlaylistService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError('Songs failure to delete');
+
+    await this._activitiesService.deleteActivities(playlistId, songId, owner);
   }
 
   async deletePlaylist(playlistId, owner) {
