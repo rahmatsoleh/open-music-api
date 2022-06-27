@@ -37,7 +37,7 @@ class AlbumService {
     const songs = await this.songs.getSongsByAlbumId(albumId);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Album tidak ditemukan');
+      throw new NotFoundError('Album is not found');
     }
 
     const {
