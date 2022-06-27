@@ -40,12 +40,17 @@ class AlbumService {
       throw new NotFoundError('Album tidak ditemukan');
     }
 
-    const { id, name, year } = result.rows[0];
+    const {
+      id, name, year, cover,
+    } = result.rows[0];
+
+    const coverUrl = cover ? `http://${process.env.HOST}:${process.env.PORT}/images/${cover}` : cover;
 
     return {
       id,
       name,
       year,
+      coverUrl,
       songs,
     };
   }
@@ -74,6 +79,15 @@ class AlbumService {
     if (!result.rows.length) {
       throw new NotFoundError(`Gagal! ID ${id} Tidak ditemukan...`);
     }
+  }
+
+  async updateCover(albumId, filename) {
+    const query = {
+      text: 'UPDATE albums SET cover = $1 WHERE id = $2',
+      values: [filename, albumId],
+    };
+
+    await this.pool.query(query);
   }
 }
 

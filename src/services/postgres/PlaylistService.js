@@ -102,7 +102,7 @@ class PlaylistService {
 
     const result = await this._pool.query(query);
 
-    if (!result.rows.length) throw new NotFoundError('User is not found');
+    if (!result.rows.length) throw new NotFoundError('Playlist is not found');
 
     return result.rows[0];
   }

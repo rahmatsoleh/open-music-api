@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Innert = require('@hapi/inert');
+const path = require('path');
 
 // Albums
 const albums = require('./api/albums');
@@ -38,6 +40,16 @@ const collaborations = require('./api/collaborations');
 const CollaborationsService = require('./services/postgres/CollaborationService');
 const CollaborationsValidator = require('./validator/collaborations');
 
+// Exports
+const _exports = require('./api/exports');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
+// Uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService');
+const UploadsValidator = require('./validator/uploads');
+
 const init = async () => {
   const albumService = new AlbumService();
   const songService = new SongService();
@@ -46,6 +58,7 @@ const init = async () => {
   const playlistService = new PlaylistService(songService, usersService);
   const collaborationService = new CollaborationsService(usersService, playlistService);
   const activitesService = new ActivitiesService(playlistService);
+  const storageService = new StorageService(path.resolve(__dirname, 'api/uploads/file/images'));
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -61,6 +74,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Innert,
     },
   ]);
 
@@ -131,6 +147,22 @@ const init = async () => {
         collaborationService,
         playlistService,
         validator: CollaborationsValidator,
+      },
+    },
+    {
+      plugin: _exports,
+      options: {
+        service: ProducerService,
+        playlist: playlistService,
+        validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        storageService,
+        albumService,
+        validator: UploadsValidator,
       },
     },
   ]);
