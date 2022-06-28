@@ -5,9 +5,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const SongService = require('./SongService');
 
 class AlbumService {
-  constructor() {
+  constructor(cache) {
     this.pool = new Pool();
     this.songs = new SongService();
+    this._cache = cache;
   }
 
   async addAlbum({ name, year }) {
@@ -28,31 +29,48 @@ class AlbumService {
   }
 
   async getAlbumById(albumId) {
-    const query = {
-      text: 'SELECT * FROM albums WHERE id=$1',
-      values: [albumId],
-    };
+    try {
+      const cache = await this._cache.get(`album:${albumId}`);
+      const album = JSON.parse(cache);
 
-    const result = await this.pool.query(query);
-    const songs = await this.songs.getSongsByAlbumId(albumId);
+      return {
+        id: album.id,
+        name: album.name,
+        year: album.year,
+        coverUrl: album.coverUrl,
+        songs: album.songs,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT * FROM albums WHERE id=$1',
+        values: [albumId],
+      };
 
-    if (!result.rows.length) {
-      throw new NotFoundError('Album is not found');
+      const result = await this.pool.query(query);
+      const songs = await this.songs.getSongsByAlbumId(albumId);
+
+      if (!result.rows.length) {
+        throw new NotFoundError('Album is not found');
+      }
+
+      const {
+        id, name, year, cover,
+      } = result.rows[0];
+
+      const coverUrl = cover ? `http://${process.env.HOST}:${process.env.PORT}/images/${cover}` : cover;
+
+      const response = {
+        id,
+        name,
+        year,
+        coverUrl,
+        songs,
+      };
+
+      await this._cache.set(`album:${albumId}`, JSON.stringify(response));
+
+      return response;
     }
-
-    const {
-      id, name, year, cover,
-    } = result.rows[0];
-
-    const coverUrl = cover ? `http://${process.env.HOST}:${process.env.PORT}/images/${cover}` : cover;
-
-    return {
-      id,
-      name,
-      year,
-      coverUrl,
-      songs,
-    };
   }
 
   async editAlbumById(id, { name, year }) {
@@ -66,6 +84,8 @@ class AlbumService {
     if (!result.rows.length) {
       throw new NotFoundError(`Gagal! ID ${id} Tidak ditemukan...`);
     }
+
+    this._cache.delete(`album:${id}`);
   }
 
   async deleteAlbumById(id) {
@@ -79,6 +99,8 @@ class AlbumService {
     if (!result.rows.length) {
       throw new NotFoundError(`Gagal! ID ${id} Tidak ditemukan...`);
     }
+
+    this._cache.delete(`album:${id}`);
   }
 
   async updateCover(albumId, filename) {
@@ -88,6 +110,7 @@ class AlbumService {
     };
 
     await this.pool.query(query);
+    this._cache.delete(`album:${albumId}`);
   }
 }
 

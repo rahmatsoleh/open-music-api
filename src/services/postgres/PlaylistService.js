@@ -7,12 +7,13 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistService {
-  constructor(songService, userService) {
+  constructor(songService, userService, cache) {
     this._pool = new Pool();
     this._songService = songService;
     this._userSerVice = userService;
     this._collaborationService = new CollaborationsService(userService);
     this._activitiesService = new ActivitiesService();
+    this._cache = cache;
   }
 
   async verifyPlaylistOwner(id, owner) {
@@ -95,16 +96,26 @@ class PlaylistService {
   }
 
   async getPlaylistById(id) {
-    const query = {
-      text: 'SELECT playlist.id, playlist.name, users.username FROM playlist LEFT JOIN users ON users.id = playlist.owner WHERE playlist.id = $1',
-      values: [id],
-    };
+    try {
+      const cache = await this._cache.get(`playlist:${id}`);
 
-    const result = await this._pool.query(query);
+      return JSON.parse(cache);
+    } catch (error) {
+      const query = {
+        text: 'SELECT playlist.id, playlist.name, users.username FROM playlist LEFT JOIN users ON users.id = playlist.owner WHERE playlist.id = $1',
+        values: [id],
+      };
 
-    if (!result.rows.length) throw new NotFoundError('Playlist is not found');
+      const result = await this._pool.query(query);
 
-    return result.rows[0];
+      if (!result.rows.length) throw new NotFoundError('Playlist is not found');
+
+      const response = result.rows[0];
+
+      await this._cache.set(`playlist:${id}`, JSON.stringify(response));
+
+      return response;
+    }
   }
 
   async postSongByIdPlaylist(owner, playlistId, songId) {
@@ -183,6 +194,8 @@ class PlaylistService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) throw new NotFoundError('Songs failure to delete');
+
+    await this._cache.delete(`playlist:${playlistId}`);
   }
 }
 

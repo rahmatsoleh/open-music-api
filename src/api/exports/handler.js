@@ -62,7 +62,6 @@ class ExportsHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Upps... Something wrong in our server',

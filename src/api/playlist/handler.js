@@ -42,7 +42,6 @@ class PlaylistHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Uppss... There was failure in our server.',
@@ -86,7 +85,6 @@ class PlaylistHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Uppss... There was failure in our server.',
@@ -126,7 +124,6 @@ class PlaylistHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Uppss... There was failure in our server.',
@@ -169,7 +166,6 @@ class PlaylistHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Uppss... There was failure in our server.',
@@ -206,7 +202,6 @@ class PlaylistHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Uppss... There was failure in our server.',

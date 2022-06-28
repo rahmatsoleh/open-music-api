@@ -34,7 +34,7 @@ class UploadHandler {
         response.code(error.statusCode);
         return response;
       }
-      // Server ERROR!
+
       const response = h.response({
         status: 'error',
         message: 'Upp... There was failure in our server.',

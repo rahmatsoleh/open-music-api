@@ -33,7 +33,6 @@ class LikeHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Upps... Something wrong in our server',
@@ -48,7 +47,8 @@ class LikeHandler {
     try {
       const { id: albumId } = request.params;
 
-      const likes = await this._service.getLikeAlbums(albumId);
+      const result = await this._service.getLikeAlbums(albumId);
+      const { cache, count: likes } = result;
 
       const response = h.response({
         status: 'success',
@@ -56,7 +56,9 @@ class LikeHandler {
           likes,
         },
       });
-      response.header('X-Data-Source', 'cache');
+      if (cache) {
+        response.header('X-Data-Source', 'cache');
+      }
       response.code(200);
       return response;
     } catch (error) {
@@ -69,7 +71,6 @@ class LikeHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Upps... Something wrong in our server',

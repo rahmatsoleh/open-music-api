@@ -1,7 +1,4 @@
 /* eslint-disable camelcase */
-
-exports.shorthands = undefined;
-
 exports.up = (pgm) => {
   pgm.addConstraint('user_album_likes', 'FK_likes.user_id_user.id', 'FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
 

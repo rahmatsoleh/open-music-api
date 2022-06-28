@@ -48,7 +48,6 @@ class CollaborationsHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'error',
         message: 'Upps... Something wrong in our server',
@@ -82,7 +81,6 @@ class CollaborationsHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'error',
         message: 'Upps... Something wrong in our sever',

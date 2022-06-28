@@ -41,7 +41,6 @@ class ActivitiesHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'error',
         message: 'Upp... There was failure in our server.',

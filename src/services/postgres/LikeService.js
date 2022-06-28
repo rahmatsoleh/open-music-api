@@ -23,9 +23,12 @@ class LikeService {
 
   async getLikeAlbums(albumId) {
     try {
-      const result = await this._cacheService.get(`album:${albumId}`);
+      const result = await this._cacheService.get(`like:${albumId}`);
 
-      return JSON.parse(result);
+      return {
+        count: JSON.parse(result),
+        cache: true,
+      };
     } catch (error) {
       await this._albumService.getAlbumById(albumId);
 
@@ -37,9 +40,12 @@ class LikeService {
       const result = await this._pool.query(query);
       const resultCount = result.rows.length;
 
-      await this._cacheService.set(`album:${albumId}`, JSON.stringify(resultCount));
+      await this._cacheService.set(`like:${albumId}`, JSON.stringify(resultCount));
 
-      return resultCount;
+      return {
+        count: resultCount,
+        cache: false,
+      };
     }
   }
 
@@ -54,7 +60,7 @@ class LikeService {
 
       const result = await this._pool.query(query);
 
-      await this._cacheService.delete(`album:${albumId}`);
+      await this._cacheService.delete(`like:${albumId}`);
 
       return {
         albumId: result.rows[0].id,
@@ -69,7 +75,7 @@ class LikeService {
 
     const result = await this._pool.query(query);
 
-    await this._cacheService.delete(`album:${albumId}`);
+    await this._cacheService.delete(`like:${albumId}`);
 
     return {
       albumId: result.rows[0].id,

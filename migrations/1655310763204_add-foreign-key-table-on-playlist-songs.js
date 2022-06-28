@@ -1,7 +1,4 @@
 /* eslint-disable camelcase */
-
-exports.shorthands = undefined;
-
 exports.up = (pgm) => {
   // Add foreign key to table playlist
   pgm.addConstraint('playlist_songs', 'fk_playlist_songs.playlist_id_playlist.id_playlist.id', 'FOREIGN KEY (playlist_id) REFERENCES playlist(id) ON DELETE CASCADE');

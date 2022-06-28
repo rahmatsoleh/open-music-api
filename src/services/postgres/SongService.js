@@ -5,8 +5,9 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapSongModel } = require('../../utils/index');
 
 class SongsService {
-  constructor() {
+  constructor(cache) {
     this.pool = new Pool();
+    this._cache = cache;
   }
 
   async addSong({
@@ -44,18 +45,28 @@ class SongsService {
   }
 
   async getSongById(id) {
-    const query = {
-      text: 'SELECT * FROM songs WHERE id = $1',
-      values: [id],
-    };
+    try {
+      const cache = await this._cache.get(`song:${id}`);
 
-    const result = await this.pool.query(query);
+      return JSON.parse(cache);
+    } catch (error) {
+      const query = {
+        text: 'SELECT * FROM songs WHERE id = $1',
+        values: [id],
+      };
 
-    if (!result.rows.length) {
-      throw new NotFoundError(`${id} Tidak ditemukan !`);
+      const result = await this.pool.query(query);
+
+      if (!result.rows.length) {
+        throw new NotFoundError(`${id} Tidak ditemukan !`);
+      }
+
+      const response = result.rows.map(mapSongModel)[0];
+
+      await this._cache.set(`song:${id}`, JSON.stringify(response));
+
+      return response;
     }
-
-    return result.rows.map(mapSongModel)[0];
   }
 
   async editSongById(id, {
@@ -71,6 +82,8 @@ class SongsService {
     if (!result.rows.length) {
       throw new NotFoundError(`Gagal ! ${id} Tidak ditemukan`);
     }
+
+    await this._cache.delete(`song:${id}`);
   }
 
   async deleteSongById(id) {
@@ -84,6 +97,8 @@ class SongsService {
     if (!result.rows.length) {
       throw new NotFoundError(`Gagal! ID ${id} Tidak ditemukan...`);
     }
+
+    await this._cache.delete(`song:${id}`);
   }
 
   async getSongsByAlbumId(albumId) {

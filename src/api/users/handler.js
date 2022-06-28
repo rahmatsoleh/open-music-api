@@ -37,7 +37,6 @@ class UsersHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'error',
         message: 'Upps, there was a failure on our server',

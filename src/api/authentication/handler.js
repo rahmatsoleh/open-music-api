@@ -45,7 +45,6 @@ class AuthenticationHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'error',
         message: 'Upp... There was failure in our server.',
@@ -81,7 +80,6 @@ class AuthenticationHandler {
         return response;
       }
 
-      // Server Error
       const response = h.response({
         status: 'Error',
         message: 'Upp... There was failure in our server.',
@@ -114,7 +112,6 @@ class AuthenticationHandler {
         return response;
       }
 
-      // Server error
       const response = h.response({
         status: 'error',
         message: 'Upp... There was failure in our server.',

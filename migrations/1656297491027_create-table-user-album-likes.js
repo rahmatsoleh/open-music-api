@@ -1,7 +1,4 @@
 /* eslint-disable camelcase */
-
-exports.shorthands = undefined;
-
 exports.up = (pgm) => {
   pgm.createTable('user_album_likes', {
     id: {
